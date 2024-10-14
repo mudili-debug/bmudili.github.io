@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBP Life Lab</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1 id="business-name">MBP Life Lab</h1>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section id="home">
+        <div class="container">
+            <h2>Welcome to MBP Life Lab</h2>
+            <p>Your one-stop solution for content creation, creative services, and more!</p>
+        </div>
+    </section>
+
+    <section id="services">
+        <div class="container">
+            <h2>Our Services</h2>
+            <ul>
+                <li>Assignment Writing</li>
+                <li>Handwriting Works</li>
+                <li>PPT & Word Documents</li>
+                <li>Creative Wishing & Proposing</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="blog">
+        <div class="container">
+            <h2>Blog & Stories</h2>
+            <!-- Blog content will be dynamically added -->
+        </div>
+    </section>
+
+    <section id="contact">
+        <div class="container">
+            <h2>Contact Us</h2>
+            <form>
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name">
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email">
+
+                <label for="message">Message</label>
+                <textarea id="message" name="message"></textarea>
+
+
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 MBP Life Lab - All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
