@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order - Dessert Store</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff5f7;
+            color: #333;
+        }
+
+        .tracking-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .tracking-header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 2px solid #ff85a2;
+            margin-bottom: 30px;
+        }
+
+        .tracking-header h1 {
+            color: #ff4d6d;
+            font-size: 2.5em;
+            margin: 0;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #ff4d6d;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .order-info {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #ff4d6d;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .order-date {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .order-price {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ff4d6d;
+            margin-top: 10px;
+        }
+
+        .tracking-progress {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .progress-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .expected-delivery {
+            background: #f0f8ff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #0066cc;
+        }
+
+        .progress-steps {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 0;
+            left: 20px;
+            height: 100%;
+            width: 4px;
+            background: #e0e0e0;
+            z-index: 1;
+        }
+
+        .progress-line-active {
+            background: #ff4d6d;
+            height: 0%;
+            transition: height 1s ease;
+        }
+
+        .step {
+            position: relative;
+            display: flex;
+            margin-bottom: 30px;
+            z-index: 2;
+        }
+
+        .step:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .step-icon.active {
+            background: #ff4d6d;
+        }
+
+        .step-icon.completed {
+            background: #4CAF50;
+        }
+
+        .step-details {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .step-title.active {
+            color: #ff4d6d;
+        }
+
+        .step-title.completed {
+            color: #4CAF50;
+        }
+
+        .step-description {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .step-date {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        .order-details {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .details-header {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .order-items {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .items-header {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .item-card {
+            display: flex;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-card:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: #f5f5f5;
+            margin-right: 20px;
+            overflow: hidden;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .item-price {
+            color: #ff4d6d;
+            font-weight: bold;
+        }
+
+        .item-quantity {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .help-section {
+            margin-top: 40px;
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .help-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .help-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .help-option {
+            padding: 10px 20px;
+            background: #fff5f7;
+            border-radius: 25px;
+            color: #ff4d6d;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .help-option:hover {
+            background: #ffd6de;
+        }
+
+        @media (max-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .expected-delivery {
+                align-self: flex-start;
+            }
+        }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="tracking-container">
+        <a href="orders.html" class="back-link">← Back to My Orders</a>
+        
+        <div class="tracking-header">
+            <h1>Track Your Order</h1>
+        </div>
+        
+        <div id="order-info" class="order-info">
+            <div class="order-id">Order #<span id="tracking-id">Loading...</span></div>
+            <div class="order-date">Placed on <span id="order-date">Loading...</span></div>
+            <div class="order-price">Total: $<span id="order-total">0.00</span></div>
+        </div>
+        
+        <div id="tracking-progress" class="tracking-progress">
+            <div class="progress-header">
+                <div class="progress-title">Order Status</div>
+                <div class="expected-delivery">Expected Delivery: <span id="delivery-date">Calculating...</span></div>
+            </div>
+            
+            <div class="progress-steps">
+                <div class="progress-line">
+                    <div class="progress-line-active" id="progress-line-active"></div>
+                </div>
+                
+                <div class="step" id="step-ordered">
+                    <div class="step-icon" id="icon-ordered">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="white"/>
+                        </svg>
+                    </div>
+                    <div class="step-details">
+                        <div class="step-title" id="title-ordered">Ordered</div>
+                        <div class="step-description">We've received your order</div>
+                        <div class="step-date" id="date-ordered">-</div>
+                    </div>
+                </div>
+                
+                <div class="step" id="step-processed">
+                    <div class="step-icon" id="icon-processed">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="white"/>
+                            <path d="M11 18H13V16H11V18ZM12 6C9.24 6 7 8.24 7 11H9C9 9.34 10.34 8 12 8C13.66 8 15 9.34 15 11C15 12 14 12 14 13H12C12 11.5 14 11.5 14 11C14 8.79 12.21 7 12 7C11.79 7 10 8.79 10 11H8C8 8.24 10.24 6 12 6Z" fill="white"/>
+                        </svg>
+                    </div>
+                    <div class="step-details">
+                        <div class="step-title" id="title-processed">Processed</div>
+                        <div class="step-description">We're preparing your order</div>
+                        <div class="step-date" id="date-processed">-</div>
+                    </div>
+                </div>
+                
+                <div class="step" id="step-shipped">
+                    <div class="step-icon" id="icon-shipped">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 8H17V4H3C1.9 4 1 4.9 1 6V17H3C3 18.66 4.34 20 6 20C7.66 20 9 18.66 9 17H15C15 18.66 16.34 20 18 20C19.66 20 21 18.66 21 17H23V12L20 8ZM6 18.5C5.17 18.5 4.5 17.83 4.5 17C4.5 16.17 5.17 15.5 6 15.5C6.83 15.5 7.5 16.17 7.5 17C7.5 17.83 6.83 18.5 6 18.5ZM19.5 9.5L21.46 12H17V9.5H19.5ZM18 18.5C17.17 18.5 16.5 17.83 16.5 17C16.5 16.17 17.17 15.5 18 15.5C18.83 15.5 19.5 16.17 19.5 17C19.5 17.83 18.83 18.5 18 18.5Z" fill="white"/>
+                        </svg>
+                    </div>
+                    <div class="step-details">
+                        <div class="step-title" id="title-shipped">Shipped</div>
+                        <div class="step-description">Your order is on the way</div>
+                        <div class="step-date" id="date-shipped">-</div>
+                    </div>
+                </div>
+                
+                <div class="step" id="step-delivered">
+                    <div class="step-icon" id="icon-delivered">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="white"/>
+                        </svg>
+                    </div>
+                    <div class="step-details">
+                        <div class="step-title" id="title-delivered">Delivered</div>
+                        <div class="step-description">Your order has arrived</div>
+                        <div class="step-date" id="date-delivered">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="order-details">
+            <div class="details-header">Order Details</div>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Payment Method</div>
+                    <div class="detail-value" id="payment-method">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Shipping Address</div>
+                    <div class="detail-value" id="shipping-address">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Contact Number</div>
+                    <div class="detail-value" id="contact-number">-</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Email Address</div>
+                    <div class="detail-value" id="email-address">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="order-items">
+            <div class="items-header">Order Items</div>
+            <div id="order-items-list">
+                <!-- Items will be inserted here -->
+            </div>
+        </div>
+        
+        <div class="help-section">
+            <div class="help-title">Need help with your order?</div>
+            <div class="help-options">
+                <a href="#" class="help-option">Contact Support</a>
+                <a href="#" class="help-option">Return or Exchange</a>
+                <a href="#" class="help-option">Cancel Order</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtiqeg_UMXmOMLgYnBfv530_N-n-nwbj8",
+            authDomain: "dessertstore-833ea.firebaseapp.com",
+            databaseURL: "https://dessertstore-833ea-default-rtdb.firebaseio.com",
+            projectId: "dessertstore-833ea",
+            storageBucket: "dessertstore-833ea.appspot.com",
+            messagingSenderId: "108572510478",
+            appId: "1:108572510478:web:e9b3439de30bdd86136f5f",
+            measurementId: "G-6BHD0FE9ML"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const trackingId = urlParams.get('trackingId');
+            
+            if (!trackingId) {
+                window.location.href = 'orders.html';
+                return;
+            }
+
+            try {
+                // Try to fetch from Firebase first
+                const orderRef = database.ref('orders').orderByChild('trackingId').equalTo(trackingId);
+                const snapshot = await orderRef.once('value');
+                
+                let order;
+                if (snapshot.exists()) {
+                    snapshot.forEach(childSnapshot => {
+                        order = childSnapshot.val();
+                    });
+                } else {
+                    // Fallback to local storage
+                    const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+                    const foundOrder = notifications.find(n => 
+                        n.type === 'order' && n.orderDetails.trackingId === trackingId
+                    );
+                    
+                    if (foundOrder) {
+                        order = foundOrder.orderDetails;
+                    } else {
+                        throw new Error('Order not found');
+                    }
+                }
+
+                displayOrderDetails(order);
+                setupProgressBar(order.status);
+                setTimelineDates(order);
+            } catch (error) {
+                console.error("Error loading order:", error);
+                alert("Order not found. Please check your tracking ID.");
+                window.location.href = 'orders.html';
+            }
+
+            function displayOrderDetails(order) {
+                document.getElementById('tracking-id').textContent = order.trackingId;
+                document.getElementById('order-date').textContent = new Date(order.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                document.getElementById('order-total').textContent = order.total.toFixed(2);
+                
+                // Calculate expected delivery date (3 days from order date)
+                const orderDate = new Date(order.date);
+                const deliveryDate = new Date(orderDate);
+                deliveryDate.setDate(orderDate.getDate() + 3);
+                
+                document.getElementById('delivery-date').textContent = deliveryDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // Display order details
+                document.getElementById('payment-method').textContent = order.paymentMethod || 'Credit Card';
+                document.getElementById('shipping-address').textContent = order.customer.address;
+                document.getElementById('contact-number').textContent = order.customer.phone || 'Not provided';
+                document.getElementById('email-address').textContent = order.customer.email;
+                
+                // Display order items
+                const itemsListEl = document.getElementById('order-items-list');
+                itemsListEl.innerHTML = '';
+                
+                order.items.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'item-card';
+                    itemEl.innerHTML = `
+                        <div class="item-image">
+                            <img src="${item.image || 'https://via.placeholder.com/80?text=Dessert'}" alt="${item.name}">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-price">$${item.price.toFixed(2)}</div>
+                            <div class="item-quantity">Quantity: ${item.quantity || 1}</div>
+                        </div>
+                    `;
+                    itemsListEl.appendChild(itemEl);
+                });
+            }
+
+            function setupProgressBar(status) {
+                const statusMap = {
+                    'Ordered': 0,
+                    'Processing': 1,
+                    'Shipped': 2,
+                    'Delivered': 3,
+                    'Cancelled': -1
+                };
+                
+                const activeStep = statusMap[status] || 0;
+                const progressPercentage = (activeStep / 3) * 100;
+                
+                document.getElementById('progress-line-active').style.height = `${progressPercentage}%`;
+                
+                // Reset all steps
+                document.querySelectorAll('.step-icon, .step-title').forEach(el => {
+                    el.classList.remove('active', 'completed');
+                });
+                
+                // Mark completed steps
+                for (let i = 0; i < activeStep; i++) {
+                    const step = ['ordered', 'processed', 'shipped', 'delivered'][i];
+                    document.getElementById(`icon-${step}`).classList.add('completed');
+                    document.getElementById(`title-${step}`).classList.add('completed');
+                }
+                
+                // Mark active step
+                if (activeStep >= 0) {
+                    const activeStepName = ['ordered', 'processed', 'shipped', 'delivered'][activeStep];
+                    if (activeStepName) {
+                        document.getElementById(`icon-${activeStepName}`).classList.add('active');
+                        document.getElementById(`title-${activeStepName}`).classList.add('active');
+                    }
+                }
+            }
+
+            function setTimelineDates(order) {
+                const orderDate = new Date(order.date);
+                
+                // Set ordered date
+                document.getElementById('date-ordered').textContent = orderDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Set processed date (1 hour after order)
+                const processedDate = new Date(orderDate);
+                processedDate.setHours(orderDate.getHours() + 1);
+                document.getElementById('date-processed').textContent = processedDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Set shipped date (1 day after order)
+                if (['Shipped', 'Delivered'].includes(order.status)) {
+                    const shippedDate = new Date(orderDate);
+                    shippedDate.setDate(orderDate.getDate() + 1);
+                    document.getElementById('date-shipped').textContent = shippedDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+                
+                // Set delivered date (3 days after order)
+                if (order.status === 'Delivered') {
+                    const deliveredDate = new Date(orderDate);
+                    deliveredDate.setDate(orderDate.getDate() + 3);
+                    document.getElementById('date-delivered').textContent = deliveredDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

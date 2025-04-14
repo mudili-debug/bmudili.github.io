@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Notifications</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .notification-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .notification-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .notification-header h1 {
+            color: #ff5733;
+        }
+        .notification-item {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .notification-item h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .notification-item p {
+            margin: 8px 0;
+        }
+        .order-items {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .status-processing {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        .tracking-id {
+            font-family: monospace;
+            background: #333;
+            color: white;
+            padding: 3px 6px;
+            border-radius: 3px;
+        }
+        .continue-shopping {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #ff5733;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .unread {
+            border-left: 4px solid #ff5733;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification-container">
+        <div class="notification-header">
+            <h1>Order Notifications</h1>
+            <p>Your recent order updates</p>
+        </div>
+        
+        <div id="notification-content">
+            <!-- Notifications will be inserted here -->
+        </div>
+        
+        <a href="homeindex.html" class="continue-shopping">Continue Shopping</a>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const notificationContent = document.getElementById("notification-content");
+            const notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+            
+            if (notifications.length === 0) {
+                notificationContent.innerHTML = `
+                    <div class="notification-item">
+                        <h3>No Recent Notifications</h3>
+                        <p>You don't have any recent order notifications.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Display all notifications
+            notifications.forEach((notification, index) => {
+                const notificationElement = document.createElement("div");
+                notificationElement.className = `notification-item ${notification.read ? '' : 'unread'}`;
+                
+                if (notification.type === "order") {
+                    let itemsHTML = '';
+                    let totalItems = 0;
+                    
+                    notification.orderDetails.items.forEach(item => {
+                        totalItems += item.quantity || 1;
+                        itemsHTML += `
+                            <div class="order-item">
+                                <span>${item.name} × ${item.quantity || 1}</span>
+                                <span>$${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    notificationElement.innerHTML = `
+                        <h3>Order Confirmation</h3>
+                        <p><strong>Date:</strong> ${notification.date}</p>
+                        <p><strong>Status:</strong> <span class="status-processing">${notification.orderDetails.status}</span></p>
+                        <p><strong>Tracking ID:</strong> <span class="tracking-id">${notification.orderDetails.trackingId}</span></p>
+                        
+                        <div class="order-items">
+                            <h4>Items (${totalItems})</h4>
+                            ${itemsHTML}
+                        </div>
+                        
+                        <div style="text-align: right; margin-top: 15px;">
+                            <p><strong>Subtotal: $${notification.orderDetails.subtotal.toFixed(2)}</strong></p>
+                            <p><strong>Shipping: $${notification.orderDetails.shipping.toFixed(2)}</strong></p>
+                            <p><strong>Total: $${notification.orderDetails.total.toFixed(2)}</strong></p>
+                        </div>
+                        
+                        <p>Shipped to: ${notification.orderDetails.customer.address}</p>
+                    `;
+                } else {
+                    notificationElement.innerHTML = `
+                        <h3>${notification.type}</h3>
+                        <p>${notification.message}</p>
+                        <p><small>${notification.date}</small></p>
+                    `;
+                }
+                
+                notificationContent.appendChild(notificationElement);
+                
+                // Mark as read when displayed
+                if (!notification.read) {
+                    notifications[index].read = true;
+                    localStorage.setItem("notifications", JSON.stringify(notifications));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

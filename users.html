@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>All Users</title>
+</head>
+<body>
+  <h1>Registered Users</h1>
+  <table border="1" id="usersTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody id="usersList"></tbody>
+  </table>
+
+  <script>
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        loadUsers();
+      }
+    });
+
+    function loadUsers() {
+      firebase.firestore().collection('users').get()
+        .then(querySnapshot => {
+          const usersList = document.getElementById('usersList');
+          usersList.innerHTML = '';
+          
+          querySnapshot.forEach(doc => {
+            const user = doc.data();
+            usersList.innerHTML += `
+              <tr>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>${user.createdAt?.toDate().toLocaleString() || 'N/A'}</td>
+              </tr>
+            `;
+          });
+        });
+    }
+  </script>
+</body>
+</html>

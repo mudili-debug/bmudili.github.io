@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - Dessert Delight</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            background-color: #fff5e1;
+            text-align: center;
+        }
+        .header {
+            background-color: #ff6f61;
+            padding: 15px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: #ffccbc;
+            padding: 10px;
+            gap: 10px;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #fff;
+            background: #d84315;
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        .nav a:hover {
+            background: #bf360c;
+        }
+        .container {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">My Account</div>
+    <nav class="nav" id="nav-menu">
+        <a href="orders.html">Orders</a>
+         
+ 
+        <a href="ordertracking.html">Ordertracking</a>
+        <a href="notification_page.html">Notifications</a>
+  
+       
+     
+
+        <a href="#logout" id="logout-btn">Log Out</a>
+    </nav>
+    <div class="container">
+        <h2>Welcome to Your Account!</h2>
+        <p>Manage your orders, wishlist, and settings with ease.</p>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const logoutBtn = document.getElementById("logout-btn");
+            logoutBtn.addEventListener("click", () => {
+                if (confirm("Are you sure you want to log out?")) {
+                    alert("You have been logged out successfully.");
+                    window.location.href = "login.html";
+                }
+            });
+
+            const navMenu = document.getElementById("nav-menu");
+            navMenu.addEventListener("mouseover", (event) => {
+                if (event.target.tagName === "A") {
+                    event.target.style.transform = "scale(1.1)";
+                }
+            });
+            navMenu.addEventListener("mouseout", (event) => {
+                if (event.target.tagName === "A") {
+                    event.target.style.transform = "scale(1)";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

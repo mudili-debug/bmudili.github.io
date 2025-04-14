@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dessert Delight - Home</title>
+    <!-- Firebase SDK v9 -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtiqeg_UMXmOMLgYnBfv530_N-n-nwbj8",
+            authDomain: "dessertstore-833ea.firebaseapp.com",
+            databaseURL: "https://dessertstore-833ea-default-rtdb.firebaseio.com",
+            projectId: "dessertstore-833ea",
+            storageBucket: "dessertstore-833ea.appspot.com",
+            messagingSenderId: "108572510478",
+            appId: "1:108572510478:web:e9b3439de30bdd86136f5f",
+            measurementId: "G-6BHD0FE9ML"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        
+        // Global variables
+        let allProducts = [];
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        // Update cart count in the header
+        function updateCartCount() {
+            document.getElementById('cart-btn').innerText = `🛒 Cart (${cart.length})`;
+        }
+
+        // Save cart to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+        }
+
+        // Render products to the page
+        function renderProducts(products) {
+            const productList = document.getElementById('product-list');
+            const loadingMessage = document.getElementById('loading-message');
+            
+            // Hide loading message
+            loadingMessage.style.display = 'none';
+            
+            // Clear previous products
+            productList.innerHTML = '';
+            
+            if (products.length === 0) {
+                productList.innerHTML = '<p style="text-align:center; width:100%;">No products found</p>';
+                return;
+            }
+
+            // Create product cards
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                productCard.innerHTML = `
+                    <img src="${product.img}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/250?text=Image+Not+Available'">
+                    <h3>${product.name}</h3>
+                    <p class="price">$${product.price.toFixed(2)}</p>
+                    <div class="rating">${'⭐'.repeat(Math.round(product.rating))} ${'☆'.repeat(5-Math.round(product.rating))} (${product.rating})</div>
+                    <button class="add-to-cart">Add to Cart</button>
+                `;
+                
+                // Add event listener for add to cart
+                productCard.querySelector('.add-to-cart').addEventListener('click', () => addToCart(product));
+                
+                productList.appendChild(productCard);
+            });
+        }
+
+        // Add product to cart
+        function addToCart(product) {
+            if (!cart.some(item => item.id === product.id)) {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    img: product.img,
+                    quantity: 1
+                });
+                saveToLocalStorage();
+                alert(`${product.name} added to cart!`);
+            } else {
+                alert('This item is already in your cart!');
+            }
+        }
+
+        // Search products
+        function setupSearch() {
+            const searchInput = document.getElementById('search');
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredProducts = allProducts.filter(product => 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    (product.category && product.category.toLowerCase().includes(searchTerm))
+                );
+                renderProducts(filteredProducts);
+            });
+        }
+
+        // Load products from Firebase
+        function loadProducts() {
+            const productsRef = ref(database, 'desserts');
+            
+            onValue(productsRef, (snapshot) => {
+                const data = snapshot.val();
+                console.log("Firebase data:", data);
+                
+                if (!data) {
+                    document.getElementById('error-message').textContent = 'No products found in database.';
+                    document.getElementById('loading-message').style.display = 'none';
+                    return;
+                }
+                
+                // Process data from Firebase
+                allProducts = [];
+                
+                // Handle both array and object formats
+                if (Array.isArray(data)) {
+                    data.forEach((product, index) => {
+                        if (product) {
+                            product.id = index.toString();
+                            allProducts.push(product);
+                        }
+                    });
+                } else if (typeof data === 'object') {
+                    Object.keys(data).forEach(category => {
+                        if (typeof data[category] === 'object') {
+                            Object.keys(data[category]).forEach(productId => {
+                                const product = data[category][productId];
+                                if (product) {
+                                    product.id = productId;
+                                    product.category = category;
+                                    allProducts.push(product);
+                                }
+                            });
+                        } else {
+                            // Handle flat structure
+                            const product = data[category];
+                            if (product) {
+                                product.id = category;
+                                allProducts.push(product);
+                            }
+                        }
+                    });
+                }
+
+                console.log('Processed products:', allProducts);
+                renderProducts(allProducts);
+                setupSearch();
+                updateCartCount();
+                
+            }, (error) => {
+                console.error('Error loading products:', error);
+                document.getElementById('loading-message').style.display = 'none';
+                document.getElementById('error-message').textContent = 'Failed to load products. Please try again later.';
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartCount();
+            loadProducts();
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ff5733;
+            padding: 10px 20px;
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #d2691e;
+        }
+        .logo img {
+            width: 100px;
+            height: auto;
+            margin-right: 15px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .search-bar input {
+            padding: 8px 15px;
+            width: 300px;
+            border: none;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+        .cart button {
+            background-color: #ffffff;
+            color: #ff5733;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            border-radius: 20px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .cart button:hover {
+            background-color: #ffddd3;
+            transform: scale(1.05);
+        }
+        .pages {
+            text-align: center;
+            padding: 15px;
+            font-size: 16px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .pages a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #ff5733;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        .pages a:hover {
+            color: #d35400;
+        }
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .product-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .product-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #eee;
+        }
+        .product-card h3 {
+            margin: 10px 0;
+            color: #333;
+            font-size: 18px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .price {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 1.2em;
+            margin: 8px 0;
+        }
+        .rating {
+            color: #f39c12;
+            font-size: 16px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .add-to-cart {
+            background-color: #ff5733;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .add-to-cart:hover {
+            background-color: #e04a2d;
+            transform: translateY(-2px);
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #666;
+        }
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            background-color: #ffebee;
+            border-radius: 5px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .products h2 {
+            text-align: center;
+            margin: 30px 0 20px;
+            color: #333;
+            font-size: 28px;
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 15px;
+                gap: 15px;
+            }
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+            }
+            .search-bar input {
+                width: 100%;
+            }
+            .product-list {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+    </style>
+<script src="common.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="C:\Users\M Bhavani prasad\Documents\suri\logo.png.png" alt="">
+            <span></span>
+        </div>
+        <nav class="nav-links">
+            <a href="accounts_page.html">Accounts</a>
+            <a href="cart.html">Cart</a>
+            <a href="notification_page.html">Notifications</a>
+            <a href="profile.html">Profile</a>
+        </nav>
+        <div class="search-bar">
+            <input type="text" id="search" placeholder="Search for Desserts...">
+        </div>
+        <div class="cart">
+            <button id="cart-btn">🛒 Cart (0)</button>
+        </div>
+    </header>
+
+    <div class="pages">
+        <a href="flavors.html">Flavors</a> | <a href="aboutUs.html">About Us</a>
+    </div>
+
+    <div class="products">
+        <h2>Featured Desserts</h2>
+        <div id="loading-message" class="loading">Loading delicious desserts...</div>
+        <div id="error-message" class="error-message"></div>
+        <div class="product-list" id="product-list"></div>
+    </div>
+</body>
+</html>

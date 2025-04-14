@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication | Dessert Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('dessert-background.jpg') no-repeat center center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .auth-container {
+            background: rgba(255, 87, 34, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px;
+        }
+        h2 {
+            color: white;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: white;
+            color: #FF5722;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #E64A19;
+            color: white;
+        }
+        #error-msg {
+            color: yellow;
+            display: none;
+        }
+        .link {
+            color: white;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2 id="form-title">Login</h2>
+        
+        <input type="email" id="email" placeholder="Enter Email" required>
+        <input type="password" id="password" placeholder="Enter Password" required>
+        <input type="text" id="username" placeholder="Enter Username" style="display:none;" required>
+
+        <button id="auth-button" onclick="handleAuth()">Login</button>
+        <p id="error-msg">Invalid email or password!</p>
+
+        <a href="#" class="link" id="toggle-auth">Create an account</a><br>
+        <a href="#" class="link" id="forgot-password-link">Forgot Password?</a>
+
+        <button id="logout-button" onclick="logout()" style="display:none;">Logout</button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
+        import { getFirestore, doc, setDoc, getDoc, collection, serverTimestamp } from "firebase/firestore"; 
+
+        // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyAtiqeg_UMXmOMLgYnBfv530_N-n-nwbj8",
+          authDomain: "dessertstore-833ea.firebaseapp.com",
+          projectId: "dessertstore-833ea",
+          storageBucket: "dessertstore-833ea.firebasestorage.app",
+          messagingSenderId: "108572510478",
+          appId: "1:108572510478:web:e9b3439de30bdd86136f5f",
+          measurementId: "G-6BHD0FE9ML"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Elements
+        const authButton = document.getElementById("auth-button");
+        const toggleAuth = document.getElementById("toggle-auth");
+        const formTitle = document.getElementById("form-title");
+        const usernameInput = document.getElementById("username");
+        const logoutButton = document.getElementById("logout-button");
+        const errorMsg = document.getElementById("error-msg");
+
+        let isLogin = true;
+
+        // Toggle between Login and Signup
+        toggleAuth.addEventListener("click", () => {
+            isLogin = !isLogin;
+            formTitle.innerText = isLogin ? "Login" : "Sign Up";
+            authButton.innerText = isLogin ? "Login" : "Sign Up";
+            toggleAuth.innerText = isLogin ? "Create an account" : "Already have an account? Login";
+            usernameInput.style.display = isLogin ? "none" : "block";
+            errorMsg.style.display = "none";
+        });
+
+        // Helper function to log authentication events
+        async function logAuthEvent(eventType, email, additionalData = {}) {
+            try {
+                const authEventRef = doc(collection(db, "authEvents"));
+                await setDoc(authEventRef, {
+                    eventType: eventType,
+                    email: email,
+                    timestamp: serverTimestamp(),
+                    ...additionalData
+                });
+            } catch (error) {
+                console.error("Error logging auth event:", error);
+            }
+        }
+
+        // Handle Authentication
+        async function handleAuth() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const username = document.getElementById("username").value.trim();
+
+            if (!email || !password || (!isLogin && !username)) {
+                errorMsg.innerText = "Please fill all fields!";
+                errorMsg.style.display = "block";
+                return;
+            }
+
+            try {
+                if (isLogin) {
+                    // Login
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    await logAuthEvent("login_success", email, {
+                        userId: userCredential.user.uid
+                    });
+                    
+                    localStorage.setItem("isLoggedIn", "true");
+                    alert("Login Successful!");
+                    window.location.href = "homeindex.html";
+                } else {
+                    // Sign Up
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Store user data in Firestore
+                    const userRef = doc(db, "users", user.uid);
+                    await setDoc(userRef, {
+                        username: username,
+                        email: email,
+                        createdAt: serverTimestamp(),
+                        lastLogin: serverTimestamp()
+                    });
+                    
+                    await logAuthEvent("signup_success", email, {
+                        userId: user.uid,
+                        username: username
+                    });
+                    
+                    alert("Account Created Successfully! Please Login.");
+                    // Switch back to login form
+                    isLogin = true;
+                    formTitle.innerText = "Login";
+                    authButton.innerText = "Login";
+                    toggleAuth.innerText = "Create an account";
+                    usernameInput.style.display = "none";
+                }
+            } catch (error) {
+                console.error("Authentication error:", error);
+                const errorCode = error.code;
+                let errorMessage = error.message;
+                
+                // More user-friendly error messages
+                if (errorCode === "auth/wrong-password") {
+                    errorMessage = "Incorrect password!";
+                } else if (errorCode === "auth/user-not-found") {
+                    errorMessage = "No account found with this email!";
+                } else if (errorCode === "auth/email-already-in-use") {
+                    errorMessage = "Email already in use!";
+                } else if (errorCode === "auth/weak-password") {
+                    errorMessage = "Password should be at least 6 characters!";
+                }
+                
+                errorMsg.innerText = errorMessage;
+                errorMsg.style.display = "block";
+                
+                // Log failed attempt
+                await logAuthEvent(isLogin ? "login_failed" : "signup_failed", email, {
+                    error: errorCode,
+                    errorMessage: error.message
+                });
+            }
+        }
+
+        // Forgot Password
+        document.getElementById("forgot-password-link").addEventListener("click", async () => {
+            const email = prompt("Enter your email for password reset:");
+            if (email) {
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    await logAuthEvent("password_reset_request", email);
+                    alert('Password reset email sent! Check your inbox.');
+                } catch (error) {
+                    await logAuthEvent("password_reset_failed", email, {
+                        error: error.code
+                    });
+                    alert('Error: ' + error.message);
+                }
+            }
+        });
+
+        // Logout Function
+        async function logout() {
+            const user = auth.currentUser;
+            const email = user ? user.email : null;
+            
+            try {
+                await signOut(auth);
+                await logAuthEvent("logout", email, {
+                    userId: user?.uid
+                });
+                localStorage.removeItem("isLoggedIn");
+                alert("Logged out successfully!");
+                window.location.href = "login.html";
+            } catch (error) {
+                await logAuthEvent("logout_failed", email, {
+                    error: error.code
+                });
+                alert("Logout failed: " + error.message);
+            }
+        }
+
+        // Check authentication state on page load
+        auth.onAuthStateChanged((user) => {
+            if (user && window.location.pathname.includes("homeindex.html")) {
+                logoutButton.style.display = "block";
+                
+                // Update last login time
+                const userRef = doc(db, "users", user.uid);
+                setDoc(userRef, {
+                    lastLogin: serverTimestamp()
+                }, { merge: true });
+            } else {
+                logoutButton.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>

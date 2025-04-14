@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Dessert Store</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff5f7;
+            color: #333;
+        }
+
+        .orders-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .orders-header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 2px solid #ff85a2;
+            margin-bottom: 30px;
+        }
+
+        .orders-header h1 {
+            color: #ff4d6d;
+            font-size: 2.5em;
+            margin: 0;
+        }
+
+        #orders-list {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #ff4d6d;
+            font-size: 1.1em;
+        }
+
+        .order-date {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 15px;
+        }
+
+        .order-status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-delivered {
+            background: #c8f5c4;
+            color: #2a7a1c;
+        }
+
+        .status-processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-shipped {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .order-summary {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .order-items {
+            flex: 2;
+        }
+
+        .order-totals {
+            flex: 1;
+            border-left: 2px solid #eee;
+            padding-left: 20px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .order-totals p {
+            margin: 10px 0;
+        }
+
+        .order-price {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ff4d6d;
+        }
+
+        .order-actions {
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .no-orders {
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .no-orders a {
+            color: #ff4d6d;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .no-orders a:hover {
+            text-decoration: underline;
+        }
+
+        .track-btn {
+            display: inline-block;
+            margin-top: 10px;
+            background-color: #ff4d6d;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .track-btn:hover {
+            background-color: #e13d5c;
+        }
+
+        @media (max-width: 768px) {
+            .orders-container {
+                padding: 10px;
+            }
+
+            .order-summary {
+                flex-direction: column;
+            }
+
+            .order-totals {
+                border-left: none;
+                padding-left: 0;
+                border-top: 2px solid #eee;
+                padding-top: 20px;
+            }
+
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="orders-container">
+        <div class="orders-header">
+            <h1>My Orders</h1>
+        </div>
+        
+        <div id="orders-list">
+            <!-- Orders will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtiqeg_UMXmOMLgYnBfv530_N-n-nwbj8",
+            authDomain: "dessertstore-833ea.firebaseapp.com",
+            databaseURL: "https://dessertstore-833ea-default-rtdb.firebaseio.com",
+            projectId: "dessertstore-833ea",
+            storageBucket: "dessertstore-833ea.appspot.com",
+            messagingSenderId: "108572510478",
+            appId: "1:108572510478:web:e9b3439de30bdd86136f5f",
+            measurementId: "G-6BHD0FE9ML"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const ordersListEl = document.getElementById('orders-list');
+
+            try {
+                const ordersRef = database.ref('orders');
+                const snapshot = await ordersRef.once('value');
+                
+                const firebaseOrders = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const order = childSnapshot.val();
+                        firebaseOrders.push({
+                            type: 'order',
+                            orderDetails: {
+                                ...order,
+                                firebaseId: childSnapshot.key
+                            }
+                        });
+                    });
+                }
+
+                const localNotifications = JSON.parse(localStorage.getItem('notifications')) || [];
+                const localOrders = localNotifications.filter(n => n.type === 'order');
+
+                const allOrders = [
+                    ...firebaseOrders,
+                    ...localOrders.filter(lo =>
+                        !firebaseOrders.some(fo => fo.orderDetails.trackingId === lo.orderDetails.trackingId)
+                    )
+                ];
+
+                displayOrders(allOrders);
+            } catch (error) {
+                console.error("Firebase error:", error);
+                const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+                const orders = notifications.filter(n => n.type === 'order');
+                displayOrders(orders);
+            }
+
+            function displayOrders(orders) {
+                if (orders.length === 0) {
+                    ordersListEl.innerHTML = `
+                        <div class="no-orders">
+                            <p>You haven't placed any orders yet</p>
+                            <p><a href="index.html">Browse our desserts</a> to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                orders.forEach(order => {
+                    const orderDetails = order.orderDetails;
+                    let itemsHTML = '';
+                    let totalItems = 0;
+
+                    orderDetails.items.forEach(item => {
+                        totalItems += item.quantity || 1;
+                        itemsHTML += `
+                            <div class="order-item">
+                                <span>${item.name} × ${item.quantity || 1}</span>
+                                <span>$${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+
+                    const orderCard = document.createElement('div');
+                    orderCard.className = 'order-card';
+                    orderCard.innerHTML = `
+                        <div class="order-header">
+                            <div>
+                                <span class="order-id">Order #${orderDetails.trackingId}</span>
+                                <span class="order-date">${new Date(orderDetails.date).toLocaleDateString()}</span>
+                            </div>
+                            <span class="order-status status-${orderDetails.status.toLowerCase()}">${orderDetails.status}</span>
+                        </div>
+                        
+                        <div class="order-summary">
+                            <div class="order-items">
+                                <h4>Items (${totalItems})</h4>
+                                ${itemsHTML}
+                            </div>
+                            <div class="order-totals">
+                                <p>Subtotal: $${orderDetails.subtotal?.toFixed(2) || orderDetails.total.toFixed(2)}</p>
+                                <p>Shipping: $${orderDetails.shipping?.toFixed(2) || '0.00'}</p>
+                                <p class="order-price">Total: $${orderDetails.total.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="order-actions">
+                            <span>Shipped to: ${orderDetails.customer.address}</span><br>
+                            <a href="ordertracking.html?trackingId=${orderDetails.trackingId}" class="track-btn">Track Order</a>
+                        </div>
+                    `;
+
+                    ordersListEl.appendChild(orderCard);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

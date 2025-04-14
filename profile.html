@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Dessert Delight</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff5e1;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: #ff6f61;
+            padding: 15px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .btn:hover {
+            background-color: #d84315;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">My Profile</div>
+    <div class="container">
+        <img src="" class="profile-img" id="profile-img">
+        <h2 id="user-name">mbp</h2>
+        <p id="user-email">bmudili918@gmail.com </p>
+        <button class="btn" onclick="editProfile()">Edit Profile</button>
+        <button class="btn" onclick="logout()">Log Out</button>
+    </div>
+
+    <script>
+        function editProfile() {
+            let newName = prompt("Enter new name:", document.getElementById("user-name").innerText);
+            let newEmail = prompt("Enter new email:", document.getElementById("user-email").innerText);
+            
+            if (newName) document.getElementById("user-name").innerText = newName;
+            if (newEmail) document.getElementById("user-email").innerText = newEmail;
+            
+            localStorage.setItem("profileName", newName);
+            localStorage.setItem("profileEmail", newEmail);
+        }
+
+        function logout() {
+            if (confirm("Are you sure you want to log out?")) {
+                alert("Logged out successfully.");
+                window.location.href = "login1.html";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            let storedName = localStorage.getItem("profileName");
+            let storedEmail = localStorage.getItem("profileEmail");
+            
+            if (storedName) document.getElementById("user-name").innerText = storedName;
+            if (storedEmail) document.getElementById("user-email").innerText = storedEmail;
+        });
+    </script>
+</body>
+</html>

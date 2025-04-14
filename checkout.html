@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Dessert Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .checkout-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        .order-summary, .payment-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .order-summary {
+            flex: 1;
+        }
+        .payment-form {
+            flex: 2;
+        }
+        h2 {
+            color: #ff5733;
+            border-bottom: 2px solid #ff5733;
+            padding-bottom: 10px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .item-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .item-details img {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .total-summary {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 2px solid #ff5733;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        button {
+            background-color: #ff5733;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #e04a2a;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <div class="order-summary">
+            <h2>Order Summary</h2>
+            <div id="order-items"></div>
+            <div class="total-summary">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Shipping:</span>
+                    <span id="shipping">$5.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2em;">
+                    <span>Total:</span>
+                    <span id="total">$0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-form">
+            <h2>Payment Information</h2>
+            <form id="checkout-form">
+                <div class="row">
+                    <div class="form-group">
+                        <label for="first-name">First Name</label>
+                        <input type="text" id="first-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last-name">Last Name</label>
+                        <input type="text" id="last-name" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <input type="text" id="address" required>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="zip">ZIP Code</label>
+                        <input type="text" id="zip" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <select id="country" required>
+                        <option value="">Select Country</option>
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="IN">india</option>
+                    </select>
+                </div>
+
+                <h3>Payment Details</h3>
+                <div class="form-group">
+                    <label for="card-name">Name on Card</label>
+                    <input type="text" id="card-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="card-number">Card Number</label>
+                    <input type="text" id="card-number" placeholder="1234 5678 9012 3456" required>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="expiry">Expiry Date</label>
+                        <input type="text" id="expiry" placeholder="MM/YY" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cvv">CVV</label>
+                        <input type="text" id="cvv" placeholder="123" required>
+                    </div>
+                </div>
+
+                <button type="submit" id="place-order">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const orderItemsEl = document.getElementById("order-items");
+            const subtotalEl = document.getElementById("subtotal");
+            const totalEl = document.getElementById("total");
+            const checkoutForm = document.getElementById("checkout-form");
+            
+            // Load cart items from localStorage
+            const cart = JSON.parse(localStorage.getItem("checkoutCart")) || [];
+            const shippingFee = 5.00;
+
+            // Generate a random tracking ID
+            function generateTrackingId() {
+                return 'TRK' + Math.floor(100000 + Math.random() * 900000);
+            }
+
+            // Render order summary
+            function renderOrderSummary() {
+                orderItemsEl.innerHTML = "";
+                
+                if (cart.length === 0) {
+                    orderItemsEl.innerHTML = "<p>Your cart is empty</p>";
+                    subtotalEl.textContent = "$0.00";
+                    totalEl.textContent = "$0.00";
+                    return;
+                }
+
+                let subtotal = 0;
+                
+                cart.forEach(item => {
+                    const quantity = item.quantity || 1;
+                    subtotal += item.price * quantity;
+                    
+                    const itemEl = document.createElement("div");
+                    itemEl.className = "cart-item";
+                    itemEl.innerHTML = `
+                        <div class="item-details">
+                            <span>${item.name} × ${quantity}</span>
+                        </div>
+                        <span>$${(item.price * quantity).toFixed(2)}</span>
+                    `;
+                    orderItemsEl.appendChild(itemEl);
+                });
+
+                subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+                totalEl.textContent = `$${(subtotal + shippingFee).toFixed(2)}`;
+            }
+
+            // Form submission
+            checkoutForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                
+                if (cart.length === 0) {
+                    alert("Your cart is empty!");
+                    return;
+                }
+
+                // Create order details
+                const orderDetails = {
+                    date: new Date().toLocaleString(),
+                    items: cart,
+                    subtotal: parseFloat(subtotalEl.textContent.replace('$', '')),
+                    shipping: shippingFee,
+                    total: parseFloat(totalEl.textContent.replace('$', '')),
+                    status: "Processing",
+                    trackingId: generateTrackingId(),
+                    customer: {
+                        name: `${document.getElementById("first-name").value} ${document.getElementById("last-name").value}`,
+                        email: document.getElementById("email").value,
+                        address: `${document.getElementById("address").value}, ${document.getElementById("city").value}, ${document.getElementById("zip").value}, ${document.getElementById("country").value}`
+                    }
+                };
+
+                // Save to localStorage for notifications and orders
+                let notifications = JSON.parse(localStorage.getItem("notifications")) || [];
+                notifications.unshift({
+                    type: "order",
+                    message: `Order #${orderDetails.trackingId} placed successfully`,
+                    date: orderDetails.date,
+                    orderDetails: orderDetails,
+                    read: false
+                });
+                localStorage.setItem("notifications", JSON.stringify(notifications));
+                
+                // Clear the cart
+                localStorage.removeItem("cart");
+                localStorage.removeItem("checkoutCart");
+                
+                // Redirect to orders page (only change made)
+                window.location.href = "orders.html";
+            });
+
+            // Simple card number formatting
+            document.getElementById("card-number").addEventListener("input", function(e) {
+                this.value = this.value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+            });
+
+            // Initial render
+            renderOrderSummary();
+        });
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const checkoutForm = document.getElementById('checkout-form');
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(checkoutForm);
+            const orderData = {
+                customer: {
+                    name: formData.get('name'),
+                    email: formData.get('email'),
+                    address: formData.get('address'),
+                    phone: formData.get('phone')
+                },
+                items: cart,
+                total: calculateTotal(cart),
+                status: "Processing",
+                date: new Date().toISOString()
+            };
+
+            try {
+                const orderId = await submitOrder(orderData);
+                localStorage.removeItem('cart');
+                window.location.href = `tracking.html?orderId=${orderId}`;
+            } catch (error) {
+                alert("Error submitting order. Please try again.");
+            }
+        });
+    }
+
+    function calculateTotal(cartItems) {
+        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+ function placeOrder() {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const customerName = document.getElementById("name").value;
+    const customerAddress = document.getElementById("address").value;
+    const customerPhone = document.getElementById("phone").value;
+
+    const orderId = "ORDER_" + Date.now();
+
+    const orderData = {
+      orderId: orderId,
+      name: customerName,
+      address: customerAddress,
+      phone: customerPhone,
+      items: cart,
+      status: "Order Placed",
+      timestamp: new Date().toLocaleString()
+    };
+
+    // Push to Firebase
+    firebase.database().ref("orders/" + orderId).set(orderData)
+      .then(() => {
+        alert("Order placed successfully!");
+        localStorage.removeItem("cart"); // clear cart
+        window.location.href = "orders.html"; // redirect
+      })
+      .catch(error => {
+        console.error("Error placing order: ", error);
+      });
+  }
+
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>
